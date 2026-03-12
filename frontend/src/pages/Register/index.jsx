@@ -1,89 +1,64 @@
-import { useState } from "react";
-import "./style.css";
+import { Link } from 'react-router-dom'
+import styles from './styles/index.module.css'
 
 export function RegisterPage() {
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    password: "",
-  });
-  const [message, setMessage] = useState("");
-
-  const handleChange = (event) => {
-    const { name, value } = event.target;
-    setForm((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleSubmit = (event) => {
-    event.preventDefault();
-
-    if (!form.name || !form.email || !form.password) {
-      setMessage("Пожалуйста, заполните все поля.");
-      return;
-    }
-
-    console.log("Форма регистрации:", form);
-    setMessage("Регистрация прошла успешно (демо).");
-  };
-
   return (
-    <div className="register-page">
-      <header className="header">
-        <div className="header__logo">Мой сайт</div>
-        <nav className="header__nav">
-          <span className="header__nav-item header__nav-item--active">
-            Регистрация
-          </span>
-        </nav>
-      </header>
-
-      <main className="auth">
-        <h1 className="auth__title">Регистрация</h1>
-        <p className="auth__subtitle">
-          Заполните форму, чтобы создать аккаунт.
+    <div className={styles.root}>
+      <div className={styles.card}>
+        <h1 className={styles.title}>Регистрация</h1>
+        <p className={styles.subtitle}>
+          Создайте новый аккаунт
         </p>
 
-        <form className="auth__form" onSubmit={handleSubmit}>
-          <label className="auth__field">
-            <span>Имя</span>
+        <form className={styles.form} noValidate>
+          <div className={styles.field}>
+            <label htmlFor="register-username" className={styles.label}>
+              Имя пользователя
+            </label>
             <input
+              id="register-username"
               type="text"
-              name="name"
-              value={form.name}
-              onChange={handleChange}
-              placeholder="Иван Иванов"
+              name="username"
+              className={styles.input}
+              placeholder="username"
+              autoComplete="username"
             />
-          </label>
-
-          <label className="auth__field">
-            <span>Email</span>
+          </div>
+          <div className={styles.field}>
+            <label htmlFor="register-email" className={styles.label}>
+              Email
+            </label>
             <input
+              id="register-email"
               type="email"
               name="email"
-              value={form.email}
-              onChange={handleChange}
-              placeholder="you@example.com"
+              className={styles.input}
+              placeholder="example@mail.com"
+              autoComplete="email"
             />
-          </label>
-
-          <label className="auth__field">
-            <span>Пароль</span>
+          </div>
+          <div className={styles.field}>
+            <label htmlFor="register-password" className={styles.label}>
+              Пароль
+            </label>
             <input
+              id="register-password"
               type="password"
               name="password"
-              value={form.password}
-              onChange={handleChange}
-              placeholder="Минимум 6 символов"
+              className={styles.input}
+              placeholder="••••••••"
+              autoComplete="new-password"
             />
-          </label>
-
-          <button type="submit" className="auth__button">
+          </div>
+          <button type="submit" className={styles.submit}>
             Зарегистрироваться
           </button>
-
-          {message && <p className="auth__message">{message}</p>}
         </form>
-      </main>
+
+        <p className={styles.footer}>
+          Уже есть аккаунт? <Link to="/login">Войти</Link>
+        </p>
+      </div>
     </div>
-  );
+  )
 }

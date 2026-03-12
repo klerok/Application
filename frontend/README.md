@@ -1,16 +1,173 @@
-# React + Vite
+# Frontend — Education Application
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Визуальная часть приложения (вёрстка без логики и без подключения к backend). Логику и интеграцию с API предстоит реализовать самостоятельно.
 
-Currently, two official plugins are available:
+---
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) (or [oxc](https://oxc.rs) when used in [rolldown-vite](https://vite.dev/guide/rolldown)) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Что используется
 
-## React Compiler
+- **React 18** — UI
+- **Vite 6** — сборка и dev-сервер
+- **React Router v7** — маршрутизация (без защищённых маршрутов и проверки авторизации)
+- **CSS Modules** — стили в `styles/index.module.css` внутри папки каждого компонента/страницы/модуля; импорт: `import styles from './styles/index.module.css'`
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+---
 
-## Expanding the ESLint configuration
+## Как запустить проект
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Требования
+
+- **Node.js** 18+ (рекомендуется 20+)
+- **npm** (или yarn/pnpm)
+
+### Установка зависимостей
+
+Из корня репозитория:
+
+```bash
+cd frontend
+npm install
+```
+
+### Режим разработки
+
+```bash
+npm run dev
+```
+
+Приложение откроется по адресу: **http://localhost:5173**
+
+### Сборка для продакшена
+
+```bash
+npm run build
+```
+
+Собранные файлы появятся в папке `dist/`.
+
+### Просмотр собранной версии
+
+```bash
+npm run preview
+```
+
+---
+
+## Структура проекта
+
+- **pages** — страницы приложения (главная, вход, регистрация). Каждая страница в своей папке: `index.jsx`, `index.js` (реэкспорт), `styles/index.module.css`.
+- **modules** — модули кода, которые можно размещать на страницах (например, форма авторизации `auth-form`). У модуля своя папка с `index.jsx`, `index.js`, `styles/index.module.css`.
+- **components** — переиспользуемые UI-компоненты (например, модальные окна), которые могут использоваться в модулях или на страницах. Структура: папка компонента → `index.jsx`, `index.js`, `styles/index.module.css`.
+- **core** — общая оболочка: layout (Layout, Header) и глобальные стили. У Layout и Header та же структура: подпапка с `index.jsx` и `styles/index.module.css`.
+- Стили везде через **CSS Modules**: файл `styles/index.module.css` в директории компонента/страницы/модуля, импорт в коде: `import styles from './styles/index.module.css'`, использование: `className={styles.имяКласса}`.
+
+```
+frontend/
+├── public/
+│   └── vite.svg
+├── src/
+│   ├── app/
+│   │   ├── App.jsx
+│   │   └── index.js
+│   ├── core/
+│   │   ├── layout/
+│   │   │   ├── Layout/
+│   │   │   │   ├── index.jsx
+│   │   │   │   └── styles/
+│   │   │   │       └── index.module.css
+│   │   │   ├── Header/
+│   │   │   │   ├── index.jsx
+│   │   │   │   └── styles/
+│   │   │   │       └── index.module.css
+│   │   │   └── index.js
+│   │   └── styles/
+│   │       └── index.css              # глобальные стили и переменные
+│   ├── pages/
+│   │   ├── Home/
+│   │   │   ├── index.jsx
+│   │   │   ├── index.js
+│   │   │   └── styles/
+│   │   │       └── index.module.css
+│   │   ├── Login/
+│   │   │   ├── index.jsx
+│   │   │   ├── index.js
+│   │   │   └── styles/
+│   │   │       └── index.module.css
+│   │   └── Register/
+│   │       ├── index.jsx
+│   │       ├── index.js
+│   │       └── styles/
+│   │           └── index.module.css
+│   ├── modules/
+│   │   └── auth-form/                  # модуль формы авторизации (можно вставить на страницу или в модалку)
+│   │       ├── index.jsx
+│   │       ├── index.js
+│   │       └── styles/
+│   │           └── index.module.css
+│   ├── components/
+│   │   └── Modal/                     # модальное окно (можно использовать в модулях)
+│   │       ├── index.jsx
+│   │       ├── index.js
+│   │       └── styles/
+│   │           └── index.module.css
+│   └── main.jsx
+├── index.html
+├── vite.config.js
+├── package.json
+└── README.md
+```
+
+---
+
+## Соответствие backend API (для дальнейшей реализации)
+
+Backend ожидает:
+
+| Действие   | Метод | URL                | Тело запроса                          |
+|-----------|-------|--------------------|----------------------------------------|
+| Регистрация | POST  | `/api/auth/register` | `{ username, email, password }`      |
+| Вход      | POST  | `/api/auth/login`    | `{ email, password }`                |
+| Выход     | POST  | `/api/auth/logout`   | — (заглушка на backend)              |
+
+При успешном входе сервер возвращает `{ token }` (JWT). Токен нужно сохранять (например, в `localStorage` или cookie) и отправлять с запросами в заголовке `Authorization`.
+
+---
+
+## План: что реализовать дальше
+
+Пошаговый план для самостоятельной реализации логики и связи с backend.
+
+1. **API-слой**
+   - Создать модуль (например, `src/modules/auth/api.js` или `src/core/api/auth.js`) с функциями: `login(email, password)`, `register(username, email, password)`, `logout()`.
+   - Использовать `fetch` с базовым URL backend (например, `http://localhost:3000`).
+   - При успешном логине сохранять токен (например, в `localStorage`) и подставлять его в заголовок `Authorization` для последующих запросов.
+
+2. **Состояние авторизации**
+   - Выбрать способ хранения состояния: React Context, Zustand, Redux или только `useState` в корневом компоненте.
+   - Хранить: факт «пользователь залогинен» и при необходимости сам токен или данные пользователя.
+   - При загрузке приложения проверять наличие токена (и при желании его валидность через отдельный endpoint, если появится на backend).
+
+3. **Обработка форм**
+   - В `LoginPage` и `RegisterPage` (страницы в `pages/Login`, `pages/Register`): добавить `useState` для полей формы и для сообщений об ошибках.
+   - В `onSubmit` формы вызывать соответствующие API-функции (`login` / `register`), обрабатывать успех (редирект, сохранение токена) и ошибки (показ сообщений под формой или под полями).
+
+4. **Защита маршрутов**
+   - Реализовать компонент-обёртку (например, `ProtectedRoute`): если пользователь не авторизован — редирект на `/login` (или на главную).
+   - Применить к маршрутам, которые должны быть доступны только после входа.
+
+5. **Header в зависимости от авторизации**
+   - Если пользователь не залогинен: показывать «Вход» и «Регистрация».
+   - Если залогинен: показывать, например, имя пользователя и кнопку «Выход»; по клику вызывать `logout()` и очищать токен и состояние.
+
+6. **Выход (logout)**
+   - Реализовать вызов `POST /api/auth/logout` (когда backend будет готов) и на фронте всегда очищать токен и состояние при нажатии «Выход».
+
+7. **Работа с постами (когда понадобится)**
+   - Backend имеет модель `Post` (title, content, authorId). Добавить новый модуль (например, `modules/posts/`) и при необходимости страницы в `pages/` для списка постов и создания поста.
+   - Запросы к API постов отправлять с заголовком `Authorization: Bearer <token>`.
+
+8. **Обработка ошибок и загрузки**
+   - Показывать индикатор загрузки при отправке форм и при запросах к API.
+   - Обрабатывать сетевые ошибки и ответы с кодами 4xx/5xx, показывать пользователю понятные сообщения.
+
+После выполнения этих шагов у вас будет полноценный фронтенд с логикой и подключением к текущему backend.
