@@ -1,14 +1,18 @@
-import { Link } from 'react-router-dom'
-import styles from './styles/index.module.css'
+import { Link } from "react-router-dom";
+import styles from "./styles/index.module.css";
+import { useState } from "react";
+import { PasswordIconView } from '../../components/PasswordIconView'
+import { PasswordIconHide } from '../../components/PasswordIconHide'
 
 export function RegisterPage() {
+
+  const [showPassword, setShowPassword] = useState(false)
+
   return (
     <div className={styles.root}>
       <div className={styles.card}>
         <h1 className={styles.title}>Регистрация</h1>
-        <p className={styles.subtitle}>
-          Создайте новый аккаунт
-        </p>
+        <p className={styles.subtitle}>Создайте новый аккаунт</p>
 
         <form className={styles.form} noValidate>
           <div className={styles.field}>
@@ -41,14 +45,23 @@ export function RegisterPage() {
             <label htmlFor="register-password" className={styles.label}>
               Пароль
             </label>
-            <input
-              id="register-password"
-              type="password"
-              name="password"
-              className={styles.input}
-              placeholder="••••••••"
-              autoComplete="new-password"
-            />
+            <div className={styles.inputWrap}>
+              <input
+                id="register-password"
+                type={showPassword ? "text" : "password"}
+                name="password"
+                className={styles.input}
+                autoComplete="new-password"
+              />
+              <button
+                type="button"
+                className={styles.toggle}
+                onClick={() => setShowPassword((e) => !e)}
+                aria-label={showPassword ? "Скрыть пароль" : "Показать пароль"}
+              >
+                {showPassword ? <PasswordIconView /> : <PasswordIconHide />}
+              </button>
+            </div>
           </div>
           <button type="submit" className={styles.submit}>
             Зарегистрироваться
@@ -60,5 +73,5 @@ export function RegisterPage() {
         </p>
       </div>
     </div>
-  )
+  );
 }

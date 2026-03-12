@@ -63,6 +63,33 @@
   box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
 }
 
+.inputWrap {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.inputWrap .input {
+  flex: 1;
+  min-width: 0;
+}
+
+.toggle {
+  padding: 0.5rem 0.75rem;
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  background: transparent;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.toggle:hover {
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
 .submit {
   margin-top: 0.5rem;
   padding: 0.75rem 1rem;
