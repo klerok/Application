@@ -2,6 +2,7 @@ import express, { Request, Response } from "express";
 import { hashPass, verifyPass } from "../utils/hashPass";
 import prisma from "../db";
 import jwt from "jsonwebtoken";
+import { authMiddleware } from "../middleware/authMiddleware";
 
 interface RegisterBody {
   username?: string;
@@ -48,20 +49,8 @@ router.post(
     }
   }
 );
-router.post("/logout", async function (req: Request, res: Response) {
-  try {
-    const { token } = req.body;
-    if (!token) {
-      throw new Error("Token is required");
-    }
-    const decoded = jwt.verify(token, process.env.SECRET_KEY || "secret");
-    if (!decoded) {
-      throw new Error("Invalid or expired token");
-    }
-    return res.status(200).json({ message: "Logged out successfully" });
-  } catch (e) {
-    return res.status(400).json({ error: e });
-  }
+router.post("/logout", authMiddleware, async function (req: Request, res: Response) {
+  return res.status(200).json({ message: "Logged out successfully" });
 });
 
 router.post(
