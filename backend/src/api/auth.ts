@@ -49,9 +49,13 @@ router.post(
     }
   }
 );
-router.post("/logout", authMiddleware, async function (req: Request, res: Response) {
-  return res.status(200).json({ message: "Logged out successfully" });
-});
+router.post(
+  "/logout",
+  authMiddleware,
+  async function (req: Request, res: Response) {
+    return res.status(200).json({ message: "Logged out successfully" });
+  }
+);
 
 router.post(
   "/register",

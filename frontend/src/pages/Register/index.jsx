@@ -1,20 +1,34 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import styles from "./styles/index.module.css";
 import { useState } from "react";
-import { PasswordIconView } from '../../components/PasswordIconView'
-import { PasswordIconHide } from '../../components/PasswordIconHide'
+import { PasswordIconView } from "../../components/PasswordIconView";
+import { PasswordIconHide } from "../../components/PasswordIconHide";
+import { AuthForm } from "../../modules/AuthForm";
+import { register } from "../../api/auth";
 
 export function RegisterPage() {
+  const [showPassword, setShowPassword] = useState(false);
+  const [username, setUsername] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const navigate = useNavigate()
 
-  const [showPassword, setShowPassword] = useState(false)
+  async function handleSubmit(e) {
+    e.preventDefault();
+    try {
+      await register(username, email, password);
+      alert("Registration successful! You can now login.");
+      navigate("/login");
+    } catch (error) {
+      console.error("Registration failed", error);
+      alert("Registration failed. Please try again.");
+    }
+  }
 
   return (
     <div className={styles.root}>
-      <div className={styles.card}>
-        <h1 className={styles.title}>Регистрация</h1>
-        <p className={styles.subtitle}>Создайте новый аккаунт</p>
-
-        <form className={styles.form} noValidate>
+      <AuthForm title="Регистрация" subtitle="Создайте новый аккаунт">
+        <form className={styles.form} noValidate onSubmit={handleSubmit}>
           <div className={styles.field}>
             <label htmlFor="register-username" className={styles.label}>
               Имя пользователя
@@ -26,6 +40,9 @@ export function RegisterPage() {
               className={styles.input}
               placeholder="username"
               autoComplete="username"
+              required
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
             />
           </div>
           <div className={styles.field}>
@@ -39,6 +56,9 @@ export function RegisterPage() {
               className={styles.input}
               placeholder="example@mail.com"
               autoComplete="email"
+              required
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
             />
           </div>
           <div className={styles.field}>
@@ -52,11 +72,14 @@ export function RegisterPage() {
                 name="password"
                 className={styles.input}
                 autoComplete="new-password"
+                required
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
               />
               <button
                 type="button"
                 className={styles.toggle}
-                onClick={() => setShowPassword((e) => !e)}
+                onClick={() => setShowPassword((prev) => !prev)}
                 aria-label={showPassword ? "Скрыть пароль" : "Показать пароль"}
               >
                 {showPassword ? <PasswordIconView /> : <PasswordIconHide />}
@@ -67,11 +90,10 @@ export function RegisterPage() {
             Зарегистрироваться
           </button>
         </form>
-
         <p className={styles.footer}>
           Уже есть аккаунт? <Link to="/login">Войти</Link>
         </p>
-      </div>
+      </AuthForm>
     </div>
   );
 }
