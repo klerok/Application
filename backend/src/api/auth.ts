@@ -2,7 +2,7 @@ import express, { Request, Response } from "express";
 import { hashPass, verifyPass } from "../utils/hashPass";
 import prisma from "../db";
 import jwt from "jsonwebtoken";
-import { authMiddleware } from "../middleware/authMiddleware";
+import { authMiddleware } from "../middleware/auth.middleware";
 
 interface RegisterBody {
   username?: string;
