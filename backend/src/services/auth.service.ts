@@ -119,6 +119,23 @@ class AuthService {
     await AuthRepository.revokeSessionsByUserId(userId);
     return { message: "Logged out from all devices" };
   }
+
+  static async logoutAllFromRefresh(refreshToken: string) {
+    const decoded = jwt.verify(refreshToken, authConfig.refresh_secret);
+    if (typeof decoded === "string") throw new Error("Invalid refresh token");
+    const userId = decoded.userId;
+    if (typeof userId !== "number")
+      throw new Error("Invalid refresh token userId");
+    const refreshHash = await hashRefreshToken(refreshToken);
+    const sessions = await AuthRepository.findActiveSessionByUserId(userId);
+    if (!sessions || sessions.length === 0)
+      throw new Error("No active sessions found");
+    const matched = sessions.filter((s) => s.refreshHash === refreshHash);
+    if (matched.length === 0)
+      throw new Error("no active session for this token");
+    await AuthRepository.revokeSessionsByUserId(userId);
+    return { message: "Logged out from all devices" };
+  }
 }
 
 export default AuthService;

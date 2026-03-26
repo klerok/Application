@@ -102,10 +102,12 @@ class AuthControllers {
 
   static async LogoutAll(req: Request, res: Response) {
     try {
-      if (typeof req.user?.userId !== "number")
-        return Send.unauthorized(res, null, "User not found");
+      const refreshToken = req.cookies.refreshToken
+      if (!refreshToken) {
+        return Send.unauthorized(res, null, 'Refresh token not found')
+      }
 
-      await AuthService.logoutAll(req.user.userId);
+      await AuthService.logoutAllFromRefresh(refreshToken)
 
       const cookieOptions = {
         httpOnly: true,

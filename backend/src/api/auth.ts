@@ -12,6 +12,6 @@ router.get("/me", authMiddleware, AuthControllers.me);
 
 router.post("/logout", AuthControllers.LogoutCurrent);
 
-router.post("/logout-all", authMiddleware, AuthControllers.LogoutAll);
+router.post("/logout-all", AuthControllers.LogoutAll);
 
 export default router;
