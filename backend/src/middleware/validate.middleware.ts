@@ -40,5 +40,14 @@ export function validateMiddleware<
         req.params = result.data;
       }
     }
+
+    if (schemas.query) {
+      const result = schemas.query.safeParse(req.query);
+      if (!result.success) {
+        Object.assign(errors, toFieldErrors(result.error))
+      } else {
+        req.query = result.data
+      }
+    }
   };
 }
