@@ -38,18 +38,24 @@ class AuthControllers {
         secure: process.env.NODE_ENV === "production",
         maxAge: 15 * 60 * 1000,
         sameSite: "strict",
+        path: "/",
       });
       res.cookie("refreshToken", userData.refreshToken, {
         httpOnly: true,
         secure: process.env.NODE_ENV === "production",
         sameSite: "strict",
+        path: "/",
       });
 
-      return Send.success(res, {
-        userId: userData.user.userId,
-        username: userData.user.username,
-        email: userData.user.email,
-      });
+      return Send.success(
+        res,
+        {
+          userId: userData.user.userId,
+          username: userData.user.username,
+          email: userData.user.email,
+        },
+        "Login successful"
+      );
     } catch (error) {
       console.error("Login failed:", error);
       return Send.error(res, null, "Login failed");

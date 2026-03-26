@@ -7,7 +7,7 @@ export const useAuth = () => {
 
   const loginUser = async (email, password) => {
     const response = await login(email, password);
-    const loggedUser = response?.user;
+    const loggedUser = response?.data;
     if (!loggedUser) throw new Error("Invalid login response");
     setUser(loggedUser);
   };
