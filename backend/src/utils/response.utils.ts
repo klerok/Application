@@ -67,6 +67,15 @@ class Send {
     });
     return;
   }
+
+  static conflict(res: Response, data: any, message = 'conflict') {
+    res.status(409).json({
+      ok: false,
+      message,
+      data,
+    });
+    return;
+  }
 }
 
 export default Send;

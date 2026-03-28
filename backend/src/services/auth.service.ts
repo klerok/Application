@@ -106,7 +106,7 @@ class AuthService {
       (s) => s.refreshHash === refreshHash
     );
     if (matchedSession.length === 0)
-      throw new Error("no active session for this token");
+      throw new Error("No active session found for this token");
     await Promise.all(
       matchedSession.map((s) => AuthRepository.revokeSessionById(s.id))
     );
@@ -132,7 +132,7 @@ class AuthService {
       throw new Error("No active sessions found");
     const matched = sessions.filter((s) => s.refreshHash === refreshHash);
     if (matched.length === 0)
-      throw new Error("no active session for this token");
+      throw new Error("No active session found for this token");
     await AuthRepository.revokeSessionsByUserId(userId);
     return { message: "Logged out from all devices" };
   }
