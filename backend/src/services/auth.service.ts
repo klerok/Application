@@ -64,6 +64,7 @@ class AuthService {
     const decodedRefresh = jwt.verify(refreshToken, authConfig.refresh_secret);
     if (typeof decodedRefresh === "string")
       throw new Error("Invalid refresh token");
+
     const exp = (decodedRefresh as jwt.JwtPayload).exp;
     if (!exp) throw new Error("Invalid refresh token");
     const expiresAt = new Date(exp * 1000);
@@ -126,7 +127,9 @@ class AuthService {
     const userId = decoded.userId;
     if (typeof userId !== "number")
       throw new Error("Invalid refresh token userId");
+
     const refreshHash = await hashRefreshToken(refreshToken);
+
     const sessions = await AuthRepository.findActiveSessionByUserId(userId);
     if (!sessions || sessions.length === 0)
       throw new Error("No active sessions found");

@@ -1,6 +1,7 @@
 import Send from "@utils/response.utils";
 import { NextFunction, Request, Response } from "express";
 import z, { ZodError } from "zod";
+import { JsonWebTokenError } from "jsonwebtoken";
 
 export function errorMiddleware(
   err: unknown,
@@ -8,11 +9,10 @@ export function errorMiddleware(
   res: Response,
   _next: NextFunction
 ) {
-  if (res.headersSent) {
-    return _next(err);
-  }
   const unauthorizedMessages = new Set([
     "Invalid credentials",
+    "jwt malformed",
+    "invalid signature",
     "Invalid refresh token",
     "Invalid refresh token userId",
     "Invalid userId",
@@ -29,11 +29,19 @@ export function errorMiddleware(
     return Send.error(res, null, message);
   }
 
+  if (res.headersSent) {
+    return _next(err);
+  }
+
   if (err instanceof ZodError) {
     return Send.validationErrors(res, z.flattenError(err).fieldErrors);
   }
 
   if (err instanceof Error) {
+    if (err instanceof JsonWebTokenError) {
+      return Send.unauthorized(res, null, "Invalid refresh token");
+    }
+
     if (unauthorizedMessages.has(err.message)) {
       return Send.unauthorized(res, null, err.message);
     }
