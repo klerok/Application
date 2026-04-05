@@ -3,6 +3,7 @@ import { Layout } from "../core/layout";
 import { HomePage } from "../pages/Home";
 import { LoginPage } from "../pages/Login";
 import { RegisterPage } from "../pages/Register";
+import { SupportPage } from "../pages/Support";
 import { AuthContext } from "../contexts/authContext";
 import { useEffect, useState } from "react";
 import { me } from "../api/auth";
@@ -39,6 +40,7 @@ export function App() {
           <Route index element={<HomePage />} />
           <Route path="login" element={<LoginPage />} />
           <Route path="register" element={<RegisterPage />} />
+          <Route path="support" element={<SupportPage />} />
         </Route>
       </Routes>
     </AuthContext.Provider>

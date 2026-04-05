@@ -9,7 +9,7 @@ export function Footer() {
         </div>
         <div className={styles.footer_line}></div>
         <div className={styles.info}>
-          <p>© 2024 | Neth BookPoint</p>
+          <p>© 2026 | Neth BookPoint</p>
         </div>
       </div>
     </footer>
