@@ -5,6 +5,7 @@ import { PasswordIconHide } from "../../components/PasswordIconHide";
 import { useState } from "react";
 import { AuthForm } from "../../modules/AuthForm";
 import { useAuth } from "../../hooks/useAuth";
+import loginImg from "../../assets/login-bg.png";
 
 export function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -16,23 +17,27 @@ export function LoginPage() {
   async function handleSubmit(e) {
     e.preventDefault();
     try {
-      await loginUser(email, password)
-      alert('Login successful! You are now logged in.')
-      navigate('/')
+      await loginUser(email, password);
+      alert("Login successful! You are now logged in.");
+      navigate("/");
     } catch (error) {
-      console.error('Login failed', error)
-      alert('Login failed. Please check your credentials.')
+      console.error("Login failed", error);
+      alert("Login failed. Please check your credentials.");
     }
   }
 
   return (
     <div className={styles.root}>
-      <AuthForm title="Вход" subtitle="Войдите в свой аккаунт">
+      <div className={styles.img}>
+        <img src={loginImg} alt="" />
+      </div>
+      <AuthForm
+        title="Welcome to Neth BookPoint!"
+        subtitle="Discover a seamless way to sell your books and unlock exclusive benefits. Enjoy a hassle-free experience, save valuable time, and take advantage of our amazing offers. в свой аккаунт"
+      >
         <form className={styles.form} noValidate onSubmit={handleSubmit}>
+          <span className={styles.start}>Login to your account</span>
           <div className={styles.field}>
-            <label htmlFor="login-email" className={styles.label}>
-              Email
-            </label>
             <input
               id="login-email"
               type="email"
@@ -44,11 +49,6 @@ export function LoginPage() {
               value={email}
               onChange={(e) => setEmail(e.target.value)}
             />
-          </div>
-          <div className={styles.field}>
-            <label htmlFor="login-password" className={styles.label}>
-              Пароль
-            </label>
             <div className={styles.inputWrap}>
               <input
                 id="login-password"
