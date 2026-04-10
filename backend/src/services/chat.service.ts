@@ -1,4 +1,5 @@
-import { ParticipantRole } from "generated/prisma";
+import { ParticipantRole, UserRole } from "generated/prisma";
+import AuthRepository from "repositories/auth.repository";
 import ChatRepository from "repositories/chat.repository";
 
 interface JoinChatInput {
@@ -16,14 +17,17 @@ class ChatService {
     const { userId, chatId } = input;
     const chat = await ChatRepository.findConversationById(chatId);
     if (!chat) throw new Error("Chat not found");
+    const user = await AuthRepository.findPublicById(userId);
+    if (!user) throw new Error("User not found");
+
+    const roleInChat =
+      user.role === UserRole.SUPPORT_AGENT
+        ? ParticipantRole.SUPPORT_AGENT
+        : ParticipantRole.CUSTOMER;
 
     const participant = await ChatRepository.findParticipant(chatId, userId);
     if (!participant) {
-      await ChatRepository.addParticipant(
-        chatId,
-        userId,
-        ParticipantRole.CUSTOMER
-      );
+      await ChatRepository.addParticipant(chatId, userId, roleInChat);
       return { success: true, message: "User joined chat successfully" };
     }
 
@@ -50,12 +54,12 @@ class ChatService {
     return message;
   }
 
-  static async listUserChats(userId: number) {
-    return ChatRepository.listConversationsForCustomer(userId)
+  static async listUserChats(userId: number, role: UserRole) {
+    return ChatRepository.listConversationsForUser(userId, role);
   }
 
-  static async listMessages(chatId: number, take=50) {
-    return ChatRepository.listMessages(chatId, take)
+  static async listMessages(chatId: number, take = 50) {
+    return ChatRepository.listMessages(chatId, take);
   }
 }
 

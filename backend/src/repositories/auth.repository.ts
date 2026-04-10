@@ -29,7 +29,7 @@ class AuthRepository {
   static async findPublicById(userId: number) {
     return prisma.user.findUnique({
       where: { userId },
-      select: { userId: true, username: true, email: true },
+      select: { userId: true, username: true, email: true, role: true },
     });
   }
 
