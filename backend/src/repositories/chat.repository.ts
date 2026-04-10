@@ -18,6 +18,23 @@ interface ListSupportChatsOptions {
 }
 
 class ChatRepository {
+  static async createMessage(
+    chatId: number,
+    senderId: number,
+    content: string
+  ) {
+    return prisma.chatMessage.create({
+      data: { chatId, senderId, content },
+      select: {
+        messageId: true,
+        chatId: true,
+        senderId: true,
+        content: true,
+        createdAt: true,
+      },
+    });
+  }
+
   static async findParticipant(chatId: number, userId: number) {
     return prisma.chatParticipant.findFirst({
       where: { chatId, userId, leftAt: null },
@@ -164,6 +181,23 @@ class ChatRepository {
         options as ListSupportChatsOptions
       );
     }
-    return []
+    return [];
+  }
+
+  static async listMessages(chatId: number, take=50) {
+    return prisma.chatMessage.findMany({
+      where: {chatId},
+      orderBy: {createdAt: 'desc'},
+      take,
+      select: {
+        messageId: true,
+        chatId: true,
+        senderId: true,
+        content: true,
+        createdAt: true,
+      },
+    })
   }
 }
+
+export default ChatRepository;
