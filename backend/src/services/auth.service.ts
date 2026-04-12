@@ -2,6 +2,7 @@ import { hashPass, hashRefreshToken, verifyPass } from "@utils/hashPass";
 import AuthRepository from "repositories/auth.repository";
 import jwt from "jsonwebtoken";
 import authConfig from "@config/auth.config";
+import type { UserRole } from "generated/prisma";
 
 interface RegisterInput {
   username: string;
@@ -21,7 +22,12 @@ interface LoginInput {
 }
 
 interface LoginResult {
-  user: { userId: number; username: string; email: string };
+  user: {
+    userId: number;
+    username: string;
+    email: string;
+    role: UserRole;
+  };
   accessToken: string;
   refreshToken: string;
 }
@@ -81,6 +87,7 @@ class AuthService {
         userId: user.userId,
         username: user.username,
         email: user.email,
+        role: user.role,
       },
       accessToken,
       refreshToken,

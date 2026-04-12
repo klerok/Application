@@ -3,6 +3,7 @@ import ChatService from "services/chat.service";
 
 type SocketData = {
   userId?: number;
+  activeChatId?: number;
 };
 
 type JoinPayload = {
@@ -14,27 +15,52 @@ type SendPayload = {
   content: string;
 };
 
+type JoinAck = { ok: true } | { ok: false; error: string };
+type SendAck = { ok: true } | { ok: false; error: string };
+
+function channelForChat(chatId: number) {
+  return `chat:${chatId}`;
+}
+
 export function registerChatHandlers(io: Server) {
   io.on("connection", (socket: Socket) => {
     const data = socket.data as SocketData;
 
     socket.on(
       "chat:join",
-      async (payload: JoinPayload, ack?: (res: any) => void) => {
+      async (payload: JoinPayload, callback?: (ack: JoinAck) => void) => {
         try {
-            const userId = socket.data.userId
+          const userId = data.userId;
           if (!userId) {
-            throw new Error("Unauthorized");
+            callback?.({ ok: false, error: "Unauthorized" });
+            return;
           }
-          const result = await ChatService.joinChat({
-            userId,
-            chatId: payload.chatId,
-          });
-          socket.join(`chat:${payload.chatId}`);
-          socket.emit("chat:joined", result);
-          ack?.({ ok: true });
+
+          const chatId = Number(payload?.chatId);
+          if (!Number.isFinite(chatId) || chatId < 1) {
+            callback?.({ ok: false, error: "Некорректный чат" });
+            return;
+          }
+
+          await ChatService.joinRoom({ userId, room: chatId });
+
+          const prev = data.activeChatId;
+          if (prev != null && prev !== chatId) {
+            socket.leave(channelForChat(prev));
+          }
+
+          data.activeChatId = chatId;
+          socket.join(channelForChat(chatId));
+
+          const [messages, ticket] = await Promise.all([
+            ChatService.getRoomHistory(chatId),
+            ChatService.getTicketByChatId(chatId),
+          ]);
+
+          socket.emit("chat:history", { chatId, messages, ticket });
+          callback?.({ ok: true });
         } catch (e) {
-          ack?.({
+          callback?.({
             ok: false,
             error: e instanceof Error ? e.message : "Unknown error",
           });
@@ -44,25 +70,44 @@ export function registerChatHandlers(io: Server) {
 
     socket.on(
       "chat:message",
-      async (payload: SendPayload, ack?: (res: any) => void) => {
+      async (payload: SendPayload, callback?: (ack: SendAck) => void) => {
         try {
           if (!data.userId) {
-            throw new Error("Unauthorized");
+            callback?.({ ok: false, error: "Unauthorized" });
+            return;
           }
-          const message = await ChatService.sendMessage({
-            userId: data.userId!,
-            chatId: payload.chatId,
-            content: payload.content,
+
+          const chatId = Number(payload?.chatId);
+          if (data.activeChatId !== chatId) {
+            callback?.({
+              ok: false,
+              error: "Сначала выберите это обращение в списке",
+            });
+            return;
+          }
+
+          const message = await ChatService.addUserMessage({
+            room: chatId,
+            userId: data.userId,
+            text: payload.content,
           });
-          io.to(`chat:${payload.chatId}`).emit("chat:message", message);
-          ack?.({ ok: true });
+          io.to(channelForChat(chatId)).emit("chat:message", message);
+          callback?.({ ok: true });
         } catch (e) {
-          ack?.({
+          callback?.({
             ok: false,
             error: e instanceof Error ? e.message : "Unknown error",
           });
         }
       }
     );
+
+    socket.on("disconnect", () => {
+      const id = data.activeChatId;
+      if (id != null) {
+        socket.leave(channelForChat(id));
+      }
+      data.activeChatId = undefined;
+    });
   });
 }

@@ -43,6 +43,7 @@ model User {
 
   sessions Session[]
   messages ChatMessage[]
+  tickets  Ticket[]
 }
 
 model Session {
@@ -59,13 +60,14 @@ model Session {
 }
 
 model ChatConversation {
-  chatId        Int                @id @default(autoincrement())
-  customerId    Int                
-  status        ConversationStatus @default(OPEN)
-  createdAt     DateTime           @default(now())
-  updatedAt     DateTime           @updatedAt
-  lastMessageAt DateTime?
+  chatId             Int                @id @default(autoincrement())
+  customerId         Int
+  status             ConversationStatus @default(OPEN)
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+  lastMessageAt      DateTime?
   hiddenByCustomerAt DateTime?
+  ticket             Ticket?
 
   customer User @relation("CustomerConversation", fields: [customerId], references: [userId], onDelete: Cascade)
 
@@ -74,8 +76,6 @@ model ChatConversation {
 
   @@index([status])
   @@index([lastMessageAt])
-
-  
 }
 
 model ChatParticipant {
@@ -106,4 +106,19 @@ model ChatMessage {
 
   @@index([chatId, createdAt])
   @@index([senderId])
+}
+
+model Ticket {
+  ticketId     Int                @id @default(autoincrement())
+  title        String
+  description  String?
+  customerId   Int
+  chatId       Int
+  createdAt    DateTime           @default(now())
+  ticketStatus ConversationStatus @default(OPEN)
+
+  customer User             @relation(fields: [customerId], references: [userId], onDelete: Cascade)
+  chat     ChatConversation @relation(fields: [chatId], references: [chatId], onDelete: Cascade)
+
+  @@unique([chatId])
 }

@@ -11,12 +11,6 @@ interface ListCustomerChatsOptions {
   take?: number;
   cursor?: number;
 }
-interface ListSupportChatsOptions {
-  status?: ConversationStatus;
-  take?: number;
-  cursor?: number;
-}
-
 class ChatRepository {
   static async createMessage(
     chatId: number,
@@ -119,47 +113,31 @@ class ChatRepository {
         lastMessageAt: true,
         updatedAt: true,
         hiddenByCustomerAt: true,
+        ticket: { select: { title: true } },
       },
     });
   }
 
-  static async listConversationsForSupport(
-    supportAgentId: number,
-    options: ListSupportChatsOptions = {}
-  ) {
-    const { status, take = 20, cursor } = options;
-    return prisma.chatParticipant.findMany({
-      where: {
-        userId: supportAgentId,
-        leftAt: null,
-        ...(status ? { conversation: { status } } : {}),
-      },
-      orderBy: { conversation: { lastMessageAt: "desc" } },
+  static async listOpenConversationsForSupportQueue(take = 100) {
+    return prisma.chatConversation.findMany({
+      where: { status: ConversationStatus.OPEN },
+      orderBy: [{ lastMessageAt: "desc" }, { updatedAt: "desc" }],
       take,
-      ...(cursor ? { skip: 1, cursor: { id: cursor } } : {}),
       select: {
-        id: true,
-        roleInChat: true,
-        joinedAt: true,
-        leftAt: true,
-        conversation: {
+        chatId: true,
+        customerId: true,
+        status: true,
+        lastMessageAt: true,
+        updatedAt: true,
+        hiddenByCustomerAt: true,
+        customer: {
           select: {
-            chatId: true,
-            customerId: true,
-            status: true,
-            createdAt: true,
-            updatedAt: true,
-            lastMessageAt: true,
-            hiddenByCustomerAt: true,
-            customer: {
-              select: {
-                userId: true,
-                username: true,
-                email: true,
-              },
-            },
+            userId: true,
+            username: true,
+            email: true,
           },
         },
+        ticket: { select: { title: true } },
       },
     });
   }
@@ -167,7 +145,7 @@ class ChatRepository {
   static async listConversationsForUser(
     userId: number,
     role: UserRole,
-    options: ListCustomerChatsOptions | ListSupportChatsOptions = {}
+    options: ListCustomerChatsOptions = {}
   ) {
     if (role === UserRole.CUSTOMER) {
       return ChatRepository.listConversationsForCustomer(
@@ -175,19 +153,20 @@ class ChatRepository {
         options as ListCustomerChatsOptions
       );
     }
-    if (role === UserRole.SUPPORT_AGENT) {
-      return ChatRepository.listConversationsForSupport(
-        userId,
-        options as ListSupportChatsOptions
-      );
+    if (
+      role === UserRole.SUPPORT_AGENT ||
+      role === UserRole.ADMIN
+    ) {
+      const rows = await ChatRepository.listOpenConversationsForSupportQueue();
+      return rows.map((conversation) => ({ conversation }));
     }
     return [];
   }
 
-  static async listMessages(chatId: number, take=50) {
+  static async listMessages(chatId: number, take = 50) {
     return prisma.chatMessage.findMany({
-      where: {chatId},
-      orderBy: {createdAt: 'desc'},
+      where: { chatId },
+      orderBy: { createdAt: "desc" },
       take,
       select: {
         messageId: true,
@@ -196,7 +175,20 @@ class ChatRepository {
         content: true,
         createdAt: true,
       },
-    })
+    });
+  }
+
+  static async findTicketByChatId(chatId: number) {
+    return prisma.ticket.findUnique({
+      where: { chatId },
+      select: {
+        ticketId: true,
+        title: true,
+        description: true,
+        ticketStatus: true,
+        chatId: true,
+      },
+    });
   }
 }
 

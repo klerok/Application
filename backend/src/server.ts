@@ -9,6 +9,7 @@ import { notFoundMiddleware } from "middleware/notFound.middleware";
 import http from 'http'
 import { Server } from 'socket.io';
 import { registerChatHandlers } from 'socket/chatSocket';
+import { attachSocketIO } from 'socket/ioInstance';
 import chatRouter from 'api/chat';
 import { socketAuthMiddleware } from 'middleware/socketAuth.middleware';
 const app = express();
@@ -33,10 +34,11 @@ const io = new Server(httpServer, {
     credentials: true,
   },
   maxHttpBufferSize: 1e8,
-})
+});
 
-io.use(socketAuthMiddleware)
-registerChatHandlers(io)
+attachSocketIO(io);
+io.use(socketAuthMiddleware);
+registerChatHandlers(io);
 
 app.use(notFoundMiddleware)
 app.use(errorMiddleware as ErrorRequestHandler);

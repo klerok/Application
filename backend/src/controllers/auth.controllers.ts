@@ -36,6 +36,7 @@ class AuthControllers {
         userId: userData.user.userId,
         username: userData.user.username,
         email: userData.user.email,
+        role: userData.user.role,
       },
       "Login successful"
     );

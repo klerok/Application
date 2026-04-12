@@ -1,6 +1,8 @@
 import jwt from "jsonwebtoken";
 import authConfig from "@config/auth.config";
+import { UserRole } from "generated/prisma";
 import type { Socket } from "socket.io";
+import AuthRepository from "repositories/auth.repository";
 
 function getCookieValue(cookieHeader: string | undefined, name: string): string | null {
   if (!cookieHeader) return null;
@@ -12,7 +14,10 @@ function getCookieValue(cookieHeader: string | undefined, name: string): string 
   return decodeURIComponent(entry.slice(name.length + 1));
 }
 
-export function socketAuthMiddleware(socket: Socket, next: (err?: Error) => void) {
+export async function socketAuthMiddleware(
+  socket: Socket,
+  next: (err?: Error) => void
+) {
   try {
     const token = getCookieValue(socket.handshake.headers.cookie, "accessToken");
     if (!token) return next(new Error("Unauthorized"));
@@ -24,6 +29,15 @@ export function socketAuthMiddleware(socket: Socket, next: (err?: Error) => void
     if (typeof userId !== "number") return next(new Error("Unauthorized"));
 
     socket.data.userId = userId;
+
+    const u = await AuthRepository.findPublicById(userId);
+    if (
+      u?.role === UserRole.SUPPORT_AGENT ||
+      u?.role === UserRole.ADMIN
+    ) {
+      socket.join("support:agents");
+    }
+
     return next();
   } catch {
     return next(new Error("Unauthorized"));

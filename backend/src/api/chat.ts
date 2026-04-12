@@ -1,9 +1,11 @@
 import { asyncHandler } from "@utils/asyncHandler";
 import express from "express";
+import { UserRole } from "generated/prisma";
 import { authMiddleware } from "middleware/auth.middleware";
 import AuthRepository from "repositories/auth.repository";
-import ChatRepository from "repositories/chat.repository";
 import ChatService from "services/chat.service";
+import { getSocketIO } from "socket/ioInstance";
+import Send from "@utils/response.utils";
 
 
 const router = express.Router();
@@ -18,12 +20,83 @@ router.get('/', asyncHandler(async (req, res) => {
     res.json({ok: true, data: chats})
 }))
 
-router.get('/:chatId/messages', asyncHandler(async (req, res) => {
-    const chatId = parseInt(req.params.chatId as string)
-    const isUserParticipant = await ChatRepository.findParticipant(chatId, req.user!.userId)
-    if (!isUserParticipant) throw new Error('User is not a participant of this chat')
-    const messages = await ChatService.listMessages(chatId)
-    res.json({ok: true, data: messages})
-}))
+router.get(
+  "/:chatId/messages",
+  asyncHandler(async (req, res) => {
+    const chatId = parseInt(req.params.chatId as string, 10);
+    const userId = req.user!.userId;
+    const user = await AuthRepository.findPublicById(userId);
+    if (!user) throw new Error("User not found");
+    const allowed = await ChatService.canReadMessages(
+      userId,
+      user.role,
+      chatId
+    );
+    if (!allowed) throw new Error("Нет доступа к этому чату");
+    const [messages, ticket] = await Promise.all([
+      ChatService.getRoomHistory(chatId),
+      ChatService.getTicketByChatId(chatId),
+    ]);
+    res.json({
+      ok: true,
+      data: { messages, ticket },
+    });
+  })
+);
+
+router.post(
+  "/:chatId/close",
+  asyncHandler(async (req, res) => {
+    const chatId = parseInt(req.params.chatId as string, 10);
+    const userId = req.user!.userId;
+    await ChatService.closeTicketAsAgent(userId, chatId);
+
+    const io = getSocketIO();
+    if (io) {
+      io.to(`chat:${chatId}`).emit("chat:closed", { chatId });
+      io.to("support:agents").emit("chat:closed", { chatId });
+    }
+
+    res.json({ ok: true, data: { chatId } });
+  })
+);
+
+router.post(
+  "/tickets",
+  asyncHandler(async (req, res) => {
+    const userId = req.user!.userId;
+    const actor = await AuthRepository.findPublicById(userId);
+    if (!actor || actor.role !== UserRole.CUSTOMER) {
+      return Send.forbidden(
+        res,
+        null,
+        "Только покупатели могут создавать обращения"
+      );
+    }
+    const { title, description } = req.body as {
+      title: string;
+      description?: string | null;
+    };
+    const result = await ChatService.createTicket({
+      customerId: userId,
+      title,
+      description: description || null,
+    });
+
+    const io = getSocketIO();
+    if (io) {
+      const customer = await AuthRepository.findPublicById(userId);
+      io.to("support:agents").emit("support:ticket-created", {
+        chatId: result.chatId,
+        title: result.ticket.title,
+        status: result.ticket.ticketStatus,
+        createdAt: result.ticket.createdAt,
+        customerUsername: customer?.username ?? null,
+      });
+    }
+
+    res.status(201).json({ ok: true, data: result });
+  })
+);
 
 export default router;
